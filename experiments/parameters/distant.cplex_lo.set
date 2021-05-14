@@ -1,0 +1,12 @@
+# distant cplex_lo
+
+reading/jsonreader/useadjacentconflicts = FALSE
+
+pricers/greedy/activate = TRUE
+pricers/cplex_lo/activate = TRUE
+pricers/cplex_nf/activate = FALSE
+pricers/cplex_pa/activate = FALSE
+pricers/cplex_lazy/activate = FALSE
+pricers/mip_lazy/activate = FALSE
+pricers/multi/activate = FALSE
+

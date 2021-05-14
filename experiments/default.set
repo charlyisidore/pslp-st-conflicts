@@ -1,0 +1,20 @@
+# default settings
+
+presolving/maxrestarts = 0
+constraints/setppc/sepafreq = -1
+constraints/knapsack/sepafreq = -1
+
+limits/time = 3600
+limits/memory = 2048
+
+pricers/cplex_lazy/workmem = 4096
+pricers/cplex_lazy/mip/strategy/file = 3
+
+pricers/cplex_lo/workmem = 4096
+pricers/cplex_lo/mip/strategy/file = 3
+
+pricers/cplex_nf/workmem = 4096
+pricers/cplex_nf/mip/strategy/file = 3
+
+pricers/cplex_pa/workmem = 4096
+pricers/cplex_pa/mip/strategy/file = 3
