@@ -13,7 +13,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "cycle_constraint_callback.hpp"
+#include "cons_callback_cycle.hpp"
 #include "graph.hpp"
 #include "graph_algorithm.hpp"
 #include <cassert>
@@ -24,10 +24,10 @@ constexpr bool PrintCuts = false;
 
 using namespace pslp::bp;
 
-CycleConstraintCallback::CycleConstraintCallback(IloEnv env,
-                                                 const IloNumVarArray &x,
-                                                 const IloArray<IloBoolArray> &adjacency_matrix,
-                                                 IloInt max_cuts)
+ConsCallbackCycle::ConsCallbackCycle(IloEnv env,
+                                     const IloNumVarArray &x,
+                                     const IloArray<IloBoolArray> &adjacency_matrix,
+                                     std::size_t max_cuts)
     : IloCplex::LazyConstraintCallbackI(env),
       _x(x),
       _adjacency_matrix(adjacency_matrix),
@@ -35,12 +35,12 @@ CycleConstraintCallback::CycleConstraintCallback(IloEnv env,
 {
 }
 
-void CycleConstraintCallback::main()
+void ConsCallbackCycle::main()
 {
     IloEnv env = getEnv();
 
     // Get the current solution
-    IloIntArray s(env);
+    std::vector<std::size_t> sol;
 
     for (IloInt i = 0; i < _x.getSize(); ++i)
     {
@@ -48,7 +48,7 @@ void CycleConstraintCallback::main()
         if (value > 0.5)
         {
             assert(value >= 0.9999);
-            s.add(i);
+            sol.push_back(i);
         }
         else
         {
@@ -56,7 +56,7 @@ void CycleConstraintCallback::main()
         }
     }
 
-    IloInt n = s.getSize();
+    std::size_t n = std::size(sol);
 
     // This constraint cannot be violated if zero or one item is selected
     if (n < 2)
@@ -67,18 +67,18 @@ void CycleConstraintCallback::main()
     // Build a subgraph from selected items
     DirectedGraph subgraph(n);
 
-    for (IloInt u = 0; u < n; ++u)
+    for (std::size_t u = 0; u < n; ++u)
     {
-        IloInt i = s[u];
+        const auto i = sol[u];
 
-        for (IloInt v = 0; v < n; ++v)
+        for (std::size_t v = 0; v < n; ++v)
         {
             if (u == v)
             {
                 continue;
             }
 
-            IloInt j = s[v];
+            const auto j = sol[v];
 
             if (_adjacency_matrix[i][j])
             {
@@ -88,7 +88,7 @@ void CycleConstraintCallback::main()
     }
 
     // Count the number of cuts for this round
-    IloInt n_cuts = 0;
+    std::size_t n_cuts = 0;
 
     // Exception thrown when the maximum number of cuts is reached
     struct MaxCuts
@@ -104,8 +104,8 @@ void CycleConstraintCallback::main()
         assert(cycle_length >= 2);
         for (auto i = first; i != last; ++i)
         {
-            assert((i + 1 == last) || _adjacency_matrix[s[*i]][s[*(i + 1)]]);
-            assert((i + 1 != last) || _adjacency_matrix[s[*i]][s[*first]]);
+            assert((i + 1 == last) || _adjacency_matrix[sol[*i]][sol[*(i + 1)]]);
+            assert((i + 1 != last) || _adjacency_matrix[sol[*i]][sol[*first]]);
         }
 #endif
 
@@ -119,10 +119,10 @@ void CycleConstraintCallback::main()
         {
             if constexpr (PrintCuts)
             {
-                std::cout << ' ' << s[*i] + 1;
+                std::cout << ' ' << sol[*i] + 1;
             }
 
-            cons.setLinearCoef(_x[s[*i]], 1.);
+            cons.setLinearCoef(_x[sol[*i]], 1.);
         }
         add(cons).end();
 
@@ -147,23 +147,21 @@ void CycleConstraintCallback::main()
     {
         // Maximum number of cuts reached
     }
-
-    s.end();
 }
 
-IloCplex::CallbackI *CycleConstraintCallback::duplicateCallback() const
+IloCplex::CallbackI *ConsCallbackCycle::duplicateCallback() const
 {
-    return (new (getEnv()) CycleConstraintCallback(*this));
+    return (new (getEnv()) ConsCallbackCycle(*this));
 }
 
-IloCplex::Callback CycleConstraintCallback::create(IloEnv env,
-                                                   const IloNumVarArray &x,
-                                                   const IloArray<IloBoolArray> &adjacency_matrix,
-                                                   IloInt max_cuts)
+IloCplex::Callback ConsCallbackCycle::create(IloEnv env,
+                                             const IloNumVarArray &x,
+                                             const IloArray<IloBoolArray> &adjacency_matrix,
+                                             std::size_t max_cuts)
 {
     return IloCplex::Callback(
-        new (env) CycleConstraintCallback(env,
-                                          x,
-                                          adjacency_matrix,
-                                          max_cuts));
+        new (env) ConsCallbackCycle(env,
+                                    x,
+                                    adjacency_matrix,
+                                    max_cuts));
 }

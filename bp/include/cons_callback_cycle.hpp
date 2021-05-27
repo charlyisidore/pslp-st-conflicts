@@ -13,8 +13,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef PSLP_BP_CYCLE_CONSTRAINT_CALLBACK_HPP
-#define PSLP_BP_CYCLE_CONSTRAINT_CALLBACK_HPP
+#ifndef PSLP_BP_CONS_CALLBACK_CYCLE_HPP
+#define PSLP_BP_CONS_CALLBACK_CYCLE_HPP
 
 #include <ilcplex/ilocplex.h>
 
@@ -27,16 +27,16 @@ namespace bp
 /**
  * CPLEX cycle elimination constraint callback.
  */
-class CycleConstraintCallback : public IloCplex::LazyConstraintCallbackI
+class ConsCallbackCycle : public IloCplex::LazyConstraintCallbackI
 {
 public:
     /**
      * Constructor.
      */
-    CycleConstraintCallback(IloEnv env,
-                            const IloNumVarArray &x,
-                            const IloArray<IloBoolArray> &adjacency_matrix,
-                            IloInt max_cuts);
+    ConsCallbackCycle(IloEnv env,
+                      const IloNumVarArray &x,
+                      const IloArray<IloBoolArray> &adjacency_matrix,
+                      std::size_t max_cuts);
 
     /**
      * Callback method.
@@ -54,12 +54,12 @@ public:
     static IloCplex::Callback create(IloEnv env,
                                      const IloNumVarArray &x,
                                      const IloArray<IloBoolArray> &adjacency_matrix,
-                                     IloInt max_cuts);
+                                     std::size_t max_cuts);
 
 private:
     IloNumVarArray _x;
     IloArray<IloBoolArray> _adjacency_matrix;
-    IloInt _max_cuts = 0;
+    std::size_t _max_cuts = 0;
 };
 
 } // namespace bp

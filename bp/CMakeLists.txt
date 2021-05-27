@@ -15,9 +15,9 @@ endif()
 
 add_library(${PROJECT_NAME}_lib STATIC
             src/branchrule_samediff.cpp
+            src/cons_callback_cycle.cpp
             src/conshdlr_cycle.cpp
             src/conshdlr_samediff.cpp
-            src/cycle_constraint_callback.cpp
             src/heur_init.cpp
             src/pricer.cpp
             src/pricer_cplex.cpp

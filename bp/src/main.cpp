@@ -65,9 +65,9 @@ static void register_pricers()
     Pricer::register_pricer<pslp::bp::PricerGreedy>(true);
     Pricer::register_pricer<pslp::bp::PricerCplexLo>(false);
     Pricer::register_pricer<pslp::bp::PricerCplexNf>(false);
-    Pricer::register_pricer<pslp::bp::PricerCplexPa>(false);
+    Pricer::register_pricer<pslp::bp::PricerCplexPa>(true);
     Pricer::register_pricer<pslp::bp::PricerCplexLazy>(false);
-    Pricer::register_pricer<pslp::bp::PricerMipLazy>(true);
+    Pricer::register_pricer<pslp::bp::PricerMipLazy>(false);
 
     using PricerMulti = pslp::bp::PricerMulti<pslp::bp::PricerGreedy,
                                               pslp::bp::PricerCplexLo,

@@ -119,10 +119,7 @@ SCIP_RETCODE PricerGreedy::solve(SCIP *scip,
             const auto u = _union_of[i];
             const auto v = _union_of[j];
 
-            if (u == v)
-            {
-                continue;
-            }
+            assert(u != v);
 
             _diff_matrix(u, v) = true;
         }

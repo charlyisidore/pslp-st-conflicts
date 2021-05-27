@@ -25,6 +25,8 @@ Required libraries:
   -c "command"  : execute single line of dialog commands (can be used multiple times)
 ```
 
+See a [list of parameters](PARAMETERS.md) specific to the PSLP solver.
+
 ## License
 
 This software is licensed under the GPLv3.

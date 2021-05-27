@@ -14,7 +14,7 @@
 */
 
 #include "pricer_cplex_lazy.hpp"
-#include "cycle_constraint_callback.hpp"
+#include "cons_callback_cycle.hpp"
 #include "graph_algorithm.hpp"
 #include "logging.hpp"
 #include "pprint.hpp"
@@ -182,7 +182,7 @@ SCIP_RETCODE PricerCplexLazy::init(SCIP *scip, const Problem &prob)
         }
     }
 
-    // Lazy constraint
+    // Adjacency matrix of the conflict graph
     IloArray<IloBoolArray> adjacency_matrix(_env, n);
     for (std::size_t i = 0; i < n; ++i)
     {
@@ -193,10 +193,10 @@ SCIP_RETCODE PricerCplexLazy::init(SCIP *scip, const Problem &prob)
         }
     }
 
-    _cplex.use(CycleConstraintCallback::create(_env,
-                                               _x,
-                                               adjacency_matrix,
-                                               _maxcuts));
+    _cplex.use(ConsCallbackCycle::create(_env,
+                                         _x,
+                                         adjacency_matrix,
+                                         _maxcuts));
 
     return SCIP_OKAY;
 }
