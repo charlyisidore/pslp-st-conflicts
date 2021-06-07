@@ -99,18 +99,30 @@ ReaderJson::ReaderJson(SCIP *scip)
                       Properties::Desc,
                       Properties::Extension)
 {
-    std::ostringstream oss;
-
-    oss << "reading/" << Properties::Name << "/useadjacentconflicts";
-
-    SCIPaddBoolParam(scip,
-                     oss.str().c_str(),
-                     "(pslp) use adjacent conflicts when unspecified?",
-                     &_useadjacentconflicts,
-                     false,
-                     _useadjacentconflicts,
-                     nullptr,
-                     nullptr);
+    {
+        std::ostringstream oss;
+        oss << "reading/" << Properties::Name << "/useadjacentconflicts";
+        SCIPaddBoolParam(scip,
+                         oss.str().c_str(),
+                         "(pslp) use adjacent conflicts when unspecified?",
+                         &_useadjacentconflicts,
+                         false,
+                         _useadjacentconflicts,
+                         nullptr,
+                         nullptr);
+    }
+    {
+        std::ostringstream oss;
+        oss << "reading/" << Properties::Name << "/transformconflicts";
+        SCIPaddBoolParam(scip,
+                         oss.str().c_str(),
+                         "(pslp) transform conflicts to remove equivalent items?",
+                         &_transformconflicts,
+                         false,
+                         _transformconflicts,
+                         nullptr,
+                         nullptr);
+    }
 }
 
 SCIP_RETCODE ReaderJson::scip_read(SCIP *scip,
@@ -368,6 +380,15 @@ SCIP_RETCODE ReaderJson::scip_read(SCIP *scip,
             initial_positions[i] = (*m_initial_positions)[i].get<std::size_t>() - 1;
         }
         probdata.set_initial_positions(initial_positions);
+    }
+
+    // Transform conflicts if the stacking matrix is transitive
+    if (_transformconflicts &&
+        probdata.type() == Probdata::Type::MinNStacks &&
+        probdata.is_stacking_transitive())
+    {
+        SCIP_CALL(probdata.transform_conflicts());
+        LOG_INFO("conflicts transformed");
     }
 
     SCIP_CALL(probdata.initialize(scip));

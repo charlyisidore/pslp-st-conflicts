@@ -154,6 +154,98 @@ void Probdata::set_blocking_matrix(const std::vector<std::vector<bool>> &matrix)
     }
 }
 
+bool Probdata::is_stacking_transitive() const
+{
+    const auto n = _conflict_matrix.n_rows();
+
+    for (std::size_t i = 0; i < n; ++i)
+    {
+        for (std::size_t j = 0; j < n; ++j)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+
+            if (_conflict_matrix(i, j))
+            {
+                continue;
+            }
+
+            for (std::size_t k = 0; k < n; ++k)
+            {
+                if (i == k || j == k)
+                {
+                    continue;
+                }
+
+                // ... && !_conflict_matrix(i, j)
+                if (!_conflict_matrix(j, k) && _conflict_matrix(i, k))
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+SCIP_RETCODE Probdata::transform_conflicts()
+{
+    const auto n = _conflict_matrix.n_rows();
+    const auto n_initial = n_initial_items();
+    bool has_max_set = true;
+
+    assert(_type == Type::MinNStacks);
+    assert(is_stacking_transitive());
+
+    while (has_max_set)
+    {
+        has_max_set = false;
+        for (std::size_t k = n_initial; k < n; ++k)
+        {
+            std::vector<std::size_t> max_set = {k};
+            for (std::size_t i = n_initial; i < n; ++i)
+            {
+                if (i == k)
+                {
+                    continue;
+                }
+                bool include = true;
+                for (auto j : max_set)
+                {
+                    if (_conflict_matrix(i, j) || _conflict_matrix(j, i))
+                    {
+                        include = false;
+                        break;
+                    }
+                }
+                if (include)
+                {
+                    max_set.push_back(i);
+                }
+            }
+            if (std::size(max_set) >= 2)
+            {
+                has_max_set = true;
+                std::sort(std::begin(max_set), std::end(max_set));
+                for (std::size_t u = 0; u < std::size(max_set); ++u)
+                {
+                    const auto i = max_set[u];
+                    for (std::size_t v = 0; v < u; ++v)
+                    {
+                        const auto j = max_set[v];
+                        _conflict_matrix(i, j) = true;
+                    }
+                }
+            }
+        }
+    }
+
+    return SCIP_OKAY;
+}
+
 SCIP_Real Probdata::dual_assign(SCIP *scip, std::size_t i, bool farkas) const
 {
     return farkas
@@ -635,11 +727,6 @@ SCIP_RETCODE Probdata::initialize(SCIP *scip)
 
         for (std::size_t j = 0; j < i; ++j)
         {
-            if (i == j)
-            {
-                continue;
-            }
-
             SCIP_CONS *cons;
             std::ostringstream oss;
             ConshdlrSamediff::Type type;

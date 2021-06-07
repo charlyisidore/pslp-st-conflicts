@@ -238,6 +238,16 @@ public:
     void set_conflict_matrix(const std::vector<std::vector<bool>> &matrix);
 
     /**
+     * Checks whether the stacking constraints are transitive.
+     */
+    bool is_stacking_transitive() const;
+
+    /**
+     * Transforms the stacking constraints to remove equivalent items.
+     */
+    [[nodiscard]] SCIP_RETCODE transform_conflicts();
+
+    /**
      * Returns the dual value of an assignment constraint.
      */
     SCIP_Real dual_assign(SCIP *scip, std::size_t i, bool farkas) const;

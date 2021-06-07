@@ -94,6 +94,7 @@ public:
 
 private:
     SCIP_Bool _useadjacentconflicts = true;
+    SCIP_Bool _transformconflicts = false;
 };
 
 } // namespace bp
