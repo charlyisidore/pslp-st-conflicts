@@ -567,7 +567,7 @@ void MipCplex::transform_conflicts(Problem &prob)
             std::vector<std::size_t> max_set = {k};
             for (std::size_t i = n_initial; i < n; ++i)
             {
-                if (i == k)
+                if (i == k || prob.arrivals[i] != prob.arrivals[k])
                 {
                     continue;
                 }
@@ -595,7 +595,7 @@ void MipCplex::transform_conflicts(Problem &prob)
                     for (std::size_t v = 0; v < u; ++v)
                     {
                         const auto j = max_set[v];
-                        prob.conflict_matrix(i, j) = true;
+                        prob.conflict_matrix(j, i) = true;
                     }
                 }
             }

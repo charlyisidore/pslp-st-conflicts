@@ -208,7 +208,7 @@ SCIP_RETCODE Probdata::transform_conflicts()
             std::vector<std::size_t> max_set = {k};
             for (std::size_t i = n_initial; i < n; ++i)
             {
-                if (i == k)
+                if (i == k || _arrivals[i] != _arrivals[k])
                 {
                     continue;
                 }
@@ -236,7 +236,7 @@ SCIP_RETCODE Probdata::transform_conflicts()
                     for (std::size_t v = 0; v < u; ++v)
                     {
                         const auto j = max_set[v];
-                        _conflict_matrix(i, j) = true;
+                        _conflict_matrix(j, i) = true;
                     }
                 }
             }
