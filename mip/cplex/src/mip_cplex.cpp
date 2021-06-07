@@ -513,6 +513,96 @@ MipCplex::Problem MipCplex::read(const nlohmann::json &json)
     return prob;
 }
 
+bool MipCplex::is_stacking_transitive(const Problem &prob) const
+{
+    const auto n = prob.conflict_matrix.n_rows();
+
+    for (std::size_t i = 0; i < n; ++i)
+    {
+        for (std::size_t j = 0; j < n; ++j)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+
+            if (prob.conflict_matrix(i, j))
+            {
+                continue;
+            }
+
+            for (std::size_t k = 0; k < n; ++k)
+            {
+                if (i == k || j == k)
+                {
+                    continue;
+                }
+
+                // ... && !prob.conflict_matrix(i, j)
+                if (!prob.conflict_matrix(j, k) && prob.conflict_matrix(i, k))
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+void MipCplex::transform_conflicts(Problem &prob)
+{
+    const auto n = prob.conflict_matrix.n_rows();
+    const auto n_initial = std::size(prob.initial_positions);
+    bool has_max_set = true;
+
+    assert(prob.type == Type::MinNStacks);
+    assert(is_stacking_transitive(prob));
+
+    while (has_max_set)
+    {
+        has_max_set = false;
+        for (std::size_t k = n_initial; k < n; ++k)
+        {
+            std::vector<std::size_t> max_set = {k};
+            for (std::size_t i = n_initial; i < n; ++i)
+            {
+                if (i == k)
+                {
+                    continue;
+                }
+                bool include = true;
+                for (auto j : max_set)
+                {
+                    if (prob.conflict_matrix(i, j) || prob.conflict_matrix(j, i))
+                    {
+                        include = false;
+                        break;
+                    }
+                }
+                if (include)
+                {
+                    max_set.push_back(i);
+                }
+            }
+            if (std::size(max_set) >= 2)
+            {
+                has_max_set = true;
+                std::sort(std::begin(max_set), std::end(max_set));
+                for (std::size_t u = 0; u < std::size(max_set); ++u)
+                {
+                    const auto i = max_set[u];
+                    for (std::size_t v = 0; v < u; ++v)
+                    {
+                        const auto j = max_set[v];
+                        prob.conflict_matrix(i, j) = true;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void MipCplex::heuristic(const Problem &prob)
 {
     const auto n_initial = std::size(prob.initial_positions);

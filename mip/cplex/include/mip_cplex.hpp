@@ -47,7 +47,7 @@ public:
         std::vector<std::size_t> arrivals;          // Arrival time of items
         std::vector<double> weights;                // Weight of items, if available
         std::vector<std::size_t> initial_positions; // Stack number of initial items
-        SquareMatrix<bool> conflict_matrix;         // Conflict constraints
+        SquareMatrix<bool> conflict_matrix;         // Conflict matrix
         DirectedGraph conflict_graph;               // Conflict graph
         Layout initial_layout;                      // The initial layout
     };
@@ -76,6 +76,16 @@ public:
      * Read the problem.
      */
     Problem read(const nlohmann::json &json);
+
+    /**
+     * Check whether stacking constraints are transitive.
+     */
+    bool is_stacking_transitive(const Problem &prob) const;
+
+    /**
+     * Transform conflicts to remove equivalent items.
+     */
+    void transform_conflicts(Problem &prob);
 
     /**
      * Find an initial heuristic solution, also determines an upper bound.

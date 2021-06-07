@@ -33,7 +33,7 @@ Usage:
   pslp_mip_cplex -m <model> -i <input> [options]
 
 Options:
-  -m --model <file>   Model name (3ind, bp, flow).
+  -m --model <name>   Model name (3ind, bp, flow).
   -i --input <file>   Input filename.
   -o --output <file>  Output filename.
   -l --lp <file>      Export the LP to <file>.
@@ -51,11 +51,13 @@ int main(int argc, char **argv)
     std::string input;
     std::string output;
     std::string output_lp;
+    bool transform_conflicts = false;
 
     // Parse command line options
 
     {
         int help_flag = 0;
+        int transform_conflicts_flag = 0;
 
         static struct ::option long_options[] = {
             {"help", no_argument, &help_flag, 1},
@@ -63,6 +65,7 @@ int main(int argc, char **argv)
             {"input", required_argument, 0, 'i'},
             {"output", required_argument, 0, 'o'},
             {"lp", required_argument, 0, 'l'},
+            {"transform-conflicts", no_argument, &transform_conflicts_flag, 1},
             {0, 0, 0, 0}};
 
         while (true)
@@ -119,6 +122,8 @@ int main(int argc, char **argv)
             std::cout << USAGE << std::endl;
             return 0;
         }
+
+        transform_conflicts = (transform_conflicts_flag != 0);
     }
 
     std::unique_ptr<MipCplex> mip;
@@ -157,6 +162,12 @@ int main(int argc, char **argv)
     }
 
     auto prob = mip->read(in);
+
+    if (transform_conflicts && mip->is_stacking_transitive(prob))
+    {
+        mip->transform_conflicts(prob);
+        LOG_INFO("conflicts transformed");
+    }
 
     mip->build(prob);
 
