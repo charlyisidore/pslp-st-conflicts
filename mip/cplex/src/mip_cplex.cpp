@@ -556,7 +556,6 @@ void MipCplex::transform_conflicts(Problem &prob)
     const auto n_initial = std::size(prob.initial_positions);
     bool has_max_set = true;
 
-    assert(prob.type == Type::MinNStacks);
     assert(is_stacking_transitive(prob));
 
     while (has_max_set)
