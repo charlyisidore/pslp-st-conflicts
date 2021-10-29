@@ -121,6 +121,12 @@ SCIP_RETCODE PricerGreedy::solve(SCIP *scip,
 
             assert(u != v);
 
+            if (u == v)
+            {
+                LOG_ERROR("diff: %zu == %zu", u + 1, v + 1);
+                return SCIP_ERROR;
+            }
+
             _diff_matrix(u, v) = true;
         }
     }

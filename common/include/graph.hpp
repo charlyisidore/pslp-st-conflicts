@@ -20,7 +20,6 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
-#include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -48,8 +47,6 @@ private:
     class _AdjacencyIterator;
     template <typename IteratorT>
     struct Range;
-    template <typename VisitorT>
-    struct _DFSVisitor;
 
 public:
     /**
@@ -82,6 +79,18 @@ public:
      */
     AdjacencyList(std::size_t n)
         : _adj_list(n) {}
+
+    /**
+     * Create a graph with n vertices and a list of edges.
+     */
+    AdjacencyList(std::size_t n, std::initializer_list<Edge> edges)
+        : _adj_list(n)
+    {
+        for (auto [i, j] : edges)
+        {
+            add_edge(i, j);
+        }
+    }
 
     /**
      * Copy constructor.
@@ -338,6 +347,48 @@ public:
     }
 
     /**
+     * Remove all edges from and to given vertex.
+     */
+    void clear_vertex(Vertex v)
+    {
+        clear_in_edges(v);
+        clear_out_edges(v);
+    }
+
+    /**
+     * Remove all in-edges edges to given vertex.
+     */
+    void clear_in_edges(Vertex v)
+    {
+        static_assert(DirectedV);
+        assert(v < std::size(_adj_list));
+        for (std::size_t u = 0; u < std::size(_adj_list); ++u)
+        {
+            if (u == v)
+            {
+                continue;
+            }
+            auto a = std::lower_bound(std::begin(_adj_list[u]),
+                                      std::end(_adj_list[u]),
+                                      v);
+            if (a != std::end(_adj_list[u]) && *a == v)
+            {
+                _adj_list[u].erase(a);
+            }
+        }
+    }
+
+    /**
+     * Remove all out-edges edges from given vertex.
+     */
+    void clear_out_edges(Vertex v)
+    {
+        static_assert(DirectedV);
+        assert(v < std::size(_adj_list));
+        _adj_list[v].clear();
+    }
+
+    /**
      * Remove all the vertices and edges.
      */
     void clear()
@@ -353,119 +404,6 @@ public:
         for (auto &adj : _adj_list)
         {
             adj.clear();
-        }
-    }
-
-    /**
-     * Explore the graph using a depth-first search.
-     */
-    template <typename VisitorT>
-    void depth_first_visit(VisitorT &&visitor) const
-    {
-        depth_first_visit(visitor);
-    }
-
-    /**
-     * Explore the graph using a depth-first search.
-     */
-    template <typename VisitorT>
-    void depth_first_visit(VisitorT &visitor) const
-    {
-        enum Mark
-        {
-            Unvisited = 0,
-            Visiting = 1,
-            Visited = 2
-        };
-
-        using State = std::tuple<Vertex,
-                                 std::optional<Edge>,
-                                 OutEdgeIterator,
-                                 OutEdgeIterator>;
-
-        _DFSVisitor<VisitorT> vis(visitor);
-        std::vector<Mark> marks(n_vertices(), Unvisited);
-        std::vector<State> stack;
-        std::optional<Edge> e_source;
-        OutEdgeIterator e;
-        OutEdgeIterator e_end;
-
-        for (auto v : vertices())
-        {
-            if (marks[v] != Unvisited)
-            {
-                continue;
-            }
-
-            vis.start_vertex(v, *this);
-
-            marks[v] = Visiting;
-            vis.discover_vertex(v, *this);
-
-            std::tie(e, e_end) = out_edges(v);
-
-            if (vis.terminate(v, *this))
-            {
-                stack.push_back({v, {}, e_end, e_end});
-            }
-            else
-            {
-                stack.push_back({v, {}, e, e_end});
-            }
-
-            while (!std::empty(stack))
-            {
-                std::tie(v, e_source, e, e_end) = std::move(stack.back());
-                stack.pop_back();
-
-                if (e_source)
-                {
-                    vis.finish_edge(*e_source, *this);
-                }
-
-                while (e != e_end)
-                {
-                    auto u = (*e).second;
-
-                    vis.examine_edge(*e, *this);
-
-                    if (marks[u] == Unvisited)
-                    {
-                        vis.tree_edge(*e, *this);
-
-                        e_source = *e;
-                        stack.push_back({v, e_source, ++e, e_end});
-
-                        v = u;
-                        marks[v] = Visiting;
-                        vis.discover_vertex(u, *this);
-
-                        std::tie(e, e_end) = out_edges(v);
-
-                        if (vis.terminate(v, *this))
-                        {
-                            e = e_end;
-                        }
-                    }
-                    else
-                    {
-                        if (marks[u] == Visiting)
-                        {
-                            vis.back_edge(*e, *this);
-                        }
-                        else // marks[u] == Visited
-                        {
-                            vis.forward_or_cross_edge(*e, *this);
-                        }
-
-                        vis.finish_edge(*e, *this);
-                        ++e;
-                    }
-                }
-
-                marks[v] = Visited;
-                vis.finish_vertex(v, *this);
-            }
         }
     }
 
@@ -530,7 +468,7 @@ public:
         {
             Vertex v = 0;
             g._adj_list[u].clear();
-            g._adj_list[u].reserve(n - std::size(_adj_list[u]));
+            g._adj_list[u].reserve(n - std::size(_adj_list[u]) - 1);
             for (auto w : _adj_list[u])
             {
                 while (v < w)
@@ -800,6 +738,11 @@ private:
             return std::distance(first, last);
         }
 
+        bool empty() const
+        {
+            return first == last;
+        }
+
         template <typename T>
         operator std::tuple<T, T>()
         {
@@ -808,143 +751,6 @@ private:
 
         Iterator first;
         Iterator last;
-    };
-
-    /**
-     * Wrapper for Depth-First Search visitors.
-     */
-    template <typename VisitorT>
-    class _DFSVisitor
-    {
-    public:
-        using Graph = AdjacencyList;
-
-        _DFSVisitor(VisitorT &visitor)
-            : _visitor(visitor) {}
-
-        void start_vertex(Vertex v, const Graph &g)
-        {
-            _start_vertex(_visitor, v, g);
-        }
-
-        void discover_vertex(Vertex v, const Graph &g)
-        {
-            _discover_vertex(_visitor, v, g);
-        }
-
-        void examine_edge(Edge e, const Graph &g)
-        {
-            _examine_edge(_visitor, e, g);
-        }
-
-        void tree_edge(Edge e, const Graph &g)
-        {
-            _tree_edge(_visitor, e, g);
-        }
-
-        void back_edge(Edge e, const Graph &g)
-        {
-            _back_edge(_visitor, e, g);
-        }
-
-        void forward_or_cross_edge(Edge e, const Graph &g)
-        {
-            _forward_or_cross_edge(_visitor, e, g);
-        }
-
-        void finish_edge(Edge e, const Graph &g)
-        {
-            _finish_edge(_visitor, e, g);
-        }
-
-        void finish_vertex(Vertex v, const Graph &g)
-        {
-            _finish_vertex(_visitor, v, g);
-        }
-
-        bool terminate(Vertex v, const Graph &g)
-        {
-            return _terminate(_visitor, v, g);
-        }
-
-    private:
-        template <typename T>
-        auto _start_vertex(T &vis, Vertex v, const Graph &g)
-            -> decltype(vis.start_vertex(v, g), void())
-        {
-            vis.start_vertex(v, g);
-        }
-
-        template <typename T>
-        auto _discover_vertex(T &vis, Vertex v, const Graph &g)
-            -> decltype(vis.discover_vertex(v, g), void())
-        {
-            vis.discover_vertex(v, g);
-        }
-
-        template <typename T>
-        auto _examine_edge(T &vis, Edge e, const Graph &g)
-            -> decltype(vis.examine_edge(e, g), void())
-        {
-            vis.examine_edge(e, g);
-        }
-
-        template <typename T>
-        auto _tree_edge(T &vis, Edge e, const Graph &g)
-            -> decltype(vis.tree_edge(e, g), void())
-        {
-            vis.tree_edge(e, g);
-        }
-
-        template <typename T>
-        auto _back_edge(T &vis, Edge e, const Graph &g)
-            -> decltype(vis.back_edge(e, g), void())
-        {
-            vis.back_edge(e, g);
-        }
-
-        template <typename T>
-        auto _forward_or_cross_edge(T &vis, Edge e, const Graph &g)
-            -> decltype(vis.forward_or_cross_edge(e, g), void())
-        {
-            vis.forward_or_cross_edge(e, g);
-        }
-
-        template <typename T>
-        auto _finish_edge(T &vis, Edge e, const Graph &g)
-            -> decltype(vis.finish_edge(e, g), void())
-        {
-            vis.finish_edge(e, g);
-        }
-
-        template <typename T>
-        auto _finish_vertex(T &vis, Vertex v, const Graph &g)
-            -> decltype(vis.finish_vertex(v, g), void())
-        {
-            vis.finish_vertex(v, g);
-        }
-
-        template <typename T>
-        auto _terminate(T &vis, Vertex v, const Graph &g)
-            -> decltype(vis.terminate(v, g), bool())
-        {
-            return vis.terminate(v, g);
-        }
-
-        void _start_vertex(...) {}
-        void _discover_vertex(...) {}
-        void _examine_edge(...) {}
-        void _tree_edge(...) {}
-        void _back_edge(...) {}
-        void _forward_or_cross_edge(...) {}
-        void _finish_edge(...) {}
-        void _finish_vertex(...) {}
-        bool _terminate(...)
-        {
-            return false;
-        }
-
-        VisitorT &_visitor;
     };
 
     std::vector<std::vector<Vertex>> _adj_list;

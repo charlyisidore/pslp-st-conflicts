@@ -205,7 +205,7 @@ struct SCIPError
         try
         {
             CycleFinder cycle_finder(create_cut);
-            subgraph.depth_first_visit(cycle_finder);
+            depth_first_visit(subgraph, cycle_finder);
         }
         catch (const MaxCuts &)
         {
@@ -295,7 +295,7 @@ struct SCIPError
         // Find a single cycle
         try
         {
-            subgraph.depth_first_visit(cycle_detector);
+            depth_first_visit(subgraph, cycle_detector);
         }
         catch (const HasCycle &)
         {

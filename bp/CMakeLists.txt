@@ -28,6 +28,7 @@ add_library(${PROJECT_NAME}_lib STATIC
             src/pricer_cplex_pa.cpp
             src/pricer_mip.cpp
             src/pricer_mip_lazy.cpp
+            src/pricer_tree.cpp
             src/probdata.cpp
             src/reader_json.cpp)
 set_target_properties(${PROJECT_NAME}_lib PROPERTIES OUTPUT_NAME ${PROJECT_NAME})

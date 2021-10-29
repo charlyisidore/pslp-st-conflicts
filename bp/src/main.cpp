@@ -59,6 +59,7 @@ using pslp::bp::ReaderJson;
 #include "pricer_greedy.hpp"
 #include "pricer_mip_lazy.hpp"
 #include "pricer_multi.hpp"
+#include "pricer_tree.hpp"
 
 static void register_pricers()
 {
@@ -68,13 +69,15 @@ static void register_pricers()
     Pricer::register_pricer<pslp::bp::PricerCplexPa>(true);
     Pricer::register_pricer<pslp::bp::PricerCplexLazy>(false);
     Pricer::register_pricer<pslp::bp::PricerMipLazy>(false);
+    Pricer::register_pricer<pslp::bp::PricerTree>(false);
 
     using PricerMulti = pslp::bp::PricerMulti<pslp::bp::PricerGreedy,
                                               pslp::bp::PricerCplexLo,
                                               pslp::bp::PricerCplexNf,
                                               pslp::bp::PricerCplexPa,
                                               pslp::bp::PricerCplexLazy,
-                                              pslp::bp::PricerMipLazy>;
+                                              pslp::bp::PricerMipLazy,
+                                              pslp::bp::PricerTree>;
 
     Pricer::register_pricer<PricerMulti>(false);
 }

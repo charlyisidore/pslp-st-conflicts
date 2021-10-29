@@ -214,7 +214,7 @@ SCIP_RETCODE PricerMipLazy::init(SCIP *scip, const Problem &prob)
         try
         {
             CycleFinder cycle_finder(create_constraint);
-            prob.conflict_graph.depth_first_visit(cycle_finder);
+            depth_first_visit(prob.conflict_graph, cycle_finder);
         }
         catch (const SCIPError &e)
         {
@@ -305,7 +305,7 @@ SCIP_RETCODE PricerMipLazy::solutions(SCIP *scip,
                 assert(pos > 0);
                 s[--pos] = items[v];
             });
-            subgraph.depth_first_visit(topo_sorter);
+            depth_first_visit(subgraph, topo_sorter);
         }
         catch (const NotADag &)
         {

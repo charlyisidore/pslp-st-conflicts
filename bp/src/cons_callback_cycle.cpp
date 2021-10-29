@@ -141,7 +141,7 @@ void ConsCallbackCycle::main()
     try
     {
         CycleFinder cycle_finder(create_cut);
-        subgraph.depth_first_visit(cycle_finder);
+        depth_first_visit(subgraph, cycle_finder);
     }
     catch (const MaxCuts &)
     {

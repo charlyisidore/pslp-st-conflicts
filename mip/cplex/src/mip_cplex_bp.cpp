@@ -277,7 +277,7 @@ MipCplexBp::Solution MipCplexBp::solution(const Problem &prob)
                 assert(pos > 0);
                 layout[k][--pos] = s[v];
             });
-            subgraph.depth_first_visit(topo_sorter);
+            depth_first_visit(subgraph, topo_sorter);
         }
         catch (const NotADag &)
         {
