@@ -497,7 +497,7 @@ PricerTree::PricerTree(SCIP *scip)
         oss << "pricers/" << Properties::Name << "/nodeselection";
         SCIPaddStringParam(scip,
                            oss.str().c_str(),
-                           "(pslp) node selection rule (bfs, dfs)",
+                           "(pslp) node selection rule (bfs, brfs, cbfs, dfs)",
                            &_nodeselection,
                            false,
                            "dfs",
