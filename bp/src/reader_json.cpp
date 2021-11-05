@@ -672,6 +672,29 @@ SCIP_RETCODE ReaderJson::scip_write(SCIP *scip,
                                      {"n_presol_calls", SCIPconshdlrGetNPresolCalls(conshdlr)}});
     }
 
+    SCIP_RELAX **relaxs = SCIPgetRelaxs(scip);
+    int n_relaxs = SCIPgetNRelaxs(scip);
+
+    json["relaxs"] = nlohmann::json::array();
+
+    for (int t = 0; t < n_relaxs; ++t)
+    {
+        SCIP_RELAX *relax = relaxs[t];
+
+        json["relaxs"].push_back({{"name", SCIPrelaxGetName(relax)},
+                                  {"priority", SCIPrelaxGetPriority(relax)},
+                                  {"freq", SCIPrelaxGetFreq(relax)},
+                                  {"setup_time", SCIPrelaxGetSetupTime(relax)},
+                                  {"time", SCIPrelaxGetTime(relax)},
+                                  {"n_calls", SCIPrelaxGetNCalls(relax)},
+                                  {"n_cutoffs", SCIPrelaxGetNCutoffs(relax)},
+                                  {"n_improved_lowerbound", SCIPrelaxGetNImprovedLowerbound(relax)},
+                                  {"improved_lowerbound_time", SCIPrelaxGetImprovedLowerboundTime(relax)},
+                                  {"n_added_conss", SCIPrelaxGetNAddedConss(relax)},
+                                  {"n_reduced_domains", SCIPrelaxGetNReducedDomains(relax)},
+                                  {"n_separated_cuts", SCIPrelaxGetNSeparatedCuts(relax)}});
+    }
+
     json["stats"] = {
         {"status_n", SCIPgetStatus(scip)},
         {"status", to_string(SCIPgetStatus(scip))},
