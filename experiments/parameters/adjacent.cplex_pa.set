@@ -1,6 +1,7 @@
 # adjacent cplex_pa
 
 reading/jsonreader/useadjacentconflicts = TRUE
+reading/jsonreader/transformconflicts = TRUE
 
 pricers/greedy/activate = TRUE
 pricers/cplex_lo/activate = FALSE
@@ -8,5 +9,6 @@ pricers/cplex_nf/activate = FALSE
 pricers/cplex_pa/activate = TRUE
 pricers/cplex_lazy/activate = FALSE
 pricers/mip_lazy/activate = FALSE
+pricers/tree/activate = FALSE
 pricers/multi/activate = FALSE
 

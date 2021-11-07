@@ -1,14 +1,14 @@
-# distant cplex_lo
+# distant tree
 
 reading/jsonreader/useadjacentconflicts = FALSE
 reading/jsonreader/transformconflicts = TRUE
 
 pricers/greedy/activate = TRUE
-pricers/cplex_lo/activate = TRUE
+pricers/cplex_lo/activate = FALSE
 pricers/cplex_nf/activate = FALSE
 pricers/cplex_pa/activate = FALSE
 pricers/cplex_lazy/activate = FALSE
 pricers/mip_lazy/activate = FALSE
-pricers/tree/activate = FALSE
+pricers/tree/activate = TRUE
 pricers/multi/activate = FALSE
 
