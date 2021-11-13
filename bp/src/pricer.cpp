@@ -117,7 +117,7 @@ SCIP_RETCODE Pricer::pricing(SCIP *scip,
 
             assert(SCIPconsIsActive(cons));
 
-            const auto &[type, i, j] = ConshdlrSamediff::data(cons);
+            const auto [type, i, j] = ConshdlrSamediff::data(cons);
 
             if (type == ConshdlrSamediff::Type::Same)
             {
